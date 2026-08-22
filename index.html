@@ -411,7 +411,7 @@
   <div class="notifybox">
     <div class="eyebrow">The list</div>
     <h2>Keep me posted.</h2>
-    <p class="lead">Two kinds of people end up on this list: the ones who want the book, and the ones who want to be in it. Both welcome. We&rsquo;ll write when a volume is available, and when we&rsquo;re working on the next one. That&rsquo;s it &mdash; we&rsquo;re far too busy looking at packages.</p>
+    <p class="lead" id="listpromise">Two kinds of people end up on this list: the ones who want the book, and the ones who want to be in it. Both welcome. We&rsquo;ll write when a volume is available, and when we&rsquo;re working on the next one. That&rsquo;s it &mdash; we&rsquo;re far too busy looking at packages.</p>
     <form id="listform" novalidate>
       <div class="notifyrow">
         <div class="fg">
@@ -543,7 +543,7 @@
           lf.reset();
           say(res.already
                 ? 'You’re already on it. Twice is flattering, but once is plenty.'
-                : 'You’re on the list. Catalogued and filed, same as everything else around here.', true);
+                : 'You’re on the list. Try to contain yourself.', true);
         } else {
           say('Something went wrong on our end. Please try again in a moment.', false);
         }
@@ -552,7 +552,16 @@
         done();
         say('Couldn’t reach us just now — check your connection and try again.', false);
       };
-      xhr.send(JSON.stringify({ kind:'subscribe', email:email, source:'notify band' }));
+      /* Store the promise they actually saw, the same way the submission form
+         stores its consent wording — so rewording later cannot orphan what
+         people signed up to. */
+      var promise = document.getElementById('listpromise');
+      xhr.send(JSON.stringify({
+        kind: 'subscribe',
+        email: email,
+        source: 'notify band',
+        listText: promise ? promise.textContent.trim() : ''
+      }));
     });
   })();
 
@@ -748,6 +757,24 @@
     if(sending) return;
     msg.className='formmsg';
 
+    /* 18+ gate. The consent box asserts it; this enforces it. Mirrored in
+       Code.gs — a client-side check is a courtesy, not a control, so the
+       server refuses too. Fails closed: no usable age, no submission. */
+    var ageRaw = val('f_age');
+    var age = /^\d{1,3}$/.test(ageRaw) ? parseInt(ageRaw, 10) : NaN;
+    if(!ageRaw || isNaN(age)){
+      fail('Please tell us your age — everyone in the book has to be 18 or older.');
+      document.getElementById('f_age').focus(); return;
+    }
+    if(age < 18){
+      fail('Sorry — we can only accept packages from people 18 or older.');
+      document.getElementById('f_age').focus(); return;
+    }
+    if(age > 120){
+      fail('Please double-check the age you entered.');
+      document.getElementById('f_age').focus(); return;
+    }
+
     var email = val('f_email');
     if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
       fail('Please enter an email address we can reach you at.');
@@ -822,6 +849,8 @@
             thanks.className='thanks on';
             thanks.scrollIntoView({behavior:'smooth',block:'center'});
           }, 250);
+        } else if(res && res.error==='age'){
+          fail('Sorry — we can only accept packages from people 18 or older.');
         } else if(res && res.error==='too_large'){
           fail('Those photos were too large to send together. Remove one and try again.');
         } else {
