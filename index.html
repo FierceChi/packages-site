@@ -178,6 +178,14 @@
   .pick{display:none;gap:16px;align-items:center;border:1px solid var(--line-soft);padding:14px;}
   .pick.on{display:flex;}
   .picks{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+  .notifybox{max-width:620px;}
+  .notifyrow{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-top:26px;}
+  .notifyrow .fg{flex:1;min-width:230px;margin:0;}
+  .notifyrow .btn{flex:none;border:none;cursor:pointer;font-family:inherit;}
+  .notifyrow .btn[disabled]{opacity:.45;cursor:default;}
+  /* .formmsg.on is defined further down; match its specificity or it wins. */
+  .formmsg.on.ok{background:#e9efe8;color:#2f4a33;border-left:2px solid #4a6b50;}
+  .notifybox .subnote{margin-top:14px;}
   .picks:empty{display:none;}
   .pick img{width:78px;height:78px;object-fit:cover;flex:none;background:var(--bg2);}
   .pick .meta{flex:1;min-width:0;font-size:12.5px;color:var(--muted);line-height:1.5;}
@@ -310,9 +318,28 @@
         <h3 class="serif">Return to Sender</h3>
         <p>Wrapped like a parcel you weren't supposed to open. Coy, tactile, and very giftable — the one that makes people at the table ask "what <em>is</em> that?"</p>
         <div class="who">For gift-givers, the curious, and every package-watcher who prefers to be discreet about it.</div>
-        <a href="#submit" class="btn primary" style="width:max-content">Notify me at launch</a>
+        <a href="#notify" class="btn primary" style="width:max-content">Notify me at launch</a>
       </div>
     </div>
+  </div>
+</div></section>
+
+<section id="notify" class="reveal"><div class="wrap">
+  <div class="notifybox">
+    <div class="eyebrow">The list</div>
+    <h2>Tell me when it lands.</h2>
+    <p class="lead">One email when the book is ready, and one when a new volume opens for submissions. Nothing else, ever.</p>
+    <form id="listform" novalidate>
+      <div class="notifyrow">
+        <div class="fg">
+          <label for="l_email">Email</label>
+          <input id="l_email" type="email" autocomplete="email" placeholder="you@example.com">
+        </div>
+        <button class="btn primary" id="listbtn" type="submit">Notify me</button>
+      </div>
+      <div class="formmsg" id="listmsg"></div>
+      <div class="subnote">No photo, no profile &mdash; just your address. Reply to any email and we&rsquo;ll take you straight off the list.</div>
+    </form>
   </div>
 </div></section>
 
@@ -376,10 +403,15 @@
       <label for="f_consent" id="consentlabel">I'm 18 or older, that's me in the photo, and I give permission for it to appear in <em>Packages</em> and in material promoting the book. I can withdraw any time before it goes to print by replying to my confirmation email.</label>
     </div>
 
+    <div class="consent" style="margin-top:12px">
+      <input type="checkbox" id="f_list">
+      <label for="f_list" id="listlabel">Also tell me when the book launches, and when a new volume opens for submissions.</label>
+    </div>
+
     <button class="submitbtn" id="pkgbtn" type="submit">Send my package</button>
     <div class="bar" id="bar"><i id="barfill"></i></div>
     <div class="formmsg" id="pkgmsg"></div>
-    <div class="subnote">We only use your email to reach you about the book &mdash; never sold, never a mailing list you didn't ask for. Trouble uploading? Email your photo and details to <a href="mailto:equalitychick@gmail.com" style="color:var(--ink)">equalitychick@gmail.com</a> instead. Handle with care.</div>
+    <div class="subnote">We only use your email to reach you about the book &mdash; never sold, never a mailing list you didn't ask for. Trouble uploading? Email your photo and details to <a href="mailto:anitapbook@gmail.com" style="color:var(--ink)">anitapbook@gmail.com</a> instead. Handle with care.</div>
   </form>
 
   <div class="thanks" id="pkgthanks">
@@ -407,7 +439,7 @@
     <details><summary>Do I have to show my face?</summary><p>No. The frame is collar-to-knee. You can use your real name or an alias for your credit line — your call.</p></details>
     <details><summary>What happens to my photo?</summary><p>We crop and style it to match the book's look, pair it with your profile, and — if selected — include it in the book.</p></details>
     <details><summary>Why do you need my permission?</summary><p>So we can legally include you in a book that might one day be sold. It's one checkbox in plain English, and we keep a record of exactly what you agreed to.</p></details>
-    <details><summary>When does it come out?</summary><p>We're in collection now. Drop your email in the form and we'll tell you the moment it ships — and which edition to grab.</p></details>
+    <details><summary>When does it come out?</summary><p>We're in collection now. Join the list and we'll tell you the moment it ships — and which edition to grab. No photo needed.</p></details>
   </div>
 </div></section>
 
@@ -446,7 +478,7 @@
       document.getElementById('edimg-src').src = e.img;
       document.getElementById('edtext-src').innerHTML =
         '<div class="tag">'+e.tag+'</div><h3 class="serif">'+e.title+'</h3><p>'+e.body+'</p>'+
-        '<div class="who">'+e.who+'</div><a href="#submit" class="btn primary" style="width:max-content">Notify me at launch</a>';
+        '<div class="who">'+e.who+'</div><a href="#notify" class="btn primary" style="width:max-content">Notify me at launch</a>';
     });
   });
 </script>
@@ -455,6 +487,70 @@
 (function(){
   /* ---- SETTINGS -------------------------------------------------------- */
   var ENDPOINT = 'https://script.google.com/macros/s/AKfycbxzXHoo1lPAk2BgYvcD_5zzmCKOIjbUXm8fbJviVG6bogS0kS2lC0aCPcLgYUyOzVAQPw/exec';
+
+  /* ------------------------------------------------------------------
+     Mailing list — email only, its own band (#notify).
+     Deliberately separate from the submission form. The "Notify me at
+     launch" buttons used to point at #submit, which dropped anyone who
+     only wanted news into a form asking for a photograph.
+     ------------------------------------------------------------------ */
+  (function(){
+    var lf = document.getElementById('listform');
+    if(!lf) return;
+    var lin  = document.getElementById('l_email'),
+        lbtn = document.getElementById('listbtn'),
+        lmsg = document.getElementById('listmsg'),
+        busy = false;
+
+    function say(text, ok){
+      lmsg.textContent = text;
+      lmsg.className = 'formmsg on' + (ok ? ' ok' : '');
+    }
+    function done(){
+      busy = false; lbtn.disabled = false; lbtn.textContent = 'Notify me';
+    }
+
+    lf.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      if(busy) return;
+
+      var email = (lin.value || '').trim();
+      if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+        say('Please enter an email address we can reach you at.', false);
+        lin.focus(); return;
+      }
+      if(ENDPOINT.indexOf('PASTE_') === 0){
+        say('This isn’t connected yet. (Setup step remaining.)', false); return;
+      }
+
+      busy = true; lbtn.disabled = true; lbtn.textContent = 'Adding…';
+
+      /* Same CORS-safe shape as the submission POST: text/plain, and nothing
+         attached to xhr.upload. See the long note in the submit handler. */
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', ENDPOINT, true);
+      xhr.setRequestHeader('Content-Type','text/plain;charset=utf-8');
+      xhr.onload = function(){
+        done();
+        var res = null;
+        try { res = JSON.parse(xhr.responseText); } catch(err){}
+        if(res && res.ok){
+          lf.reset();
+          say(res.already
+                ? 'You’re already on the list — nothing more to do.'
+                : 'You’re on the list. We’ll be in touch when it lands.', true);
+        } else {
+          say('Something went wrong on our end. Please try again in a moment.', false);
+        }
+      };
+      xhr.onerror = function(){
+        done();
+        say('Couldn’t reach us just now — check your connection and try again.', false);
+      };
+      xhr.send(JSON.stringify({ kind:'subscribe', email:email, source:'notify band' }));
+    });
+  })();
+
 
   /* Warn below this on the short edge. A full plate wants ~1600 short /
      2400 long at 300 DPI; this is the "clearly a screenshot" line. */
@@ -682,6 +778,8 @@
         device:     isPhone(),
         consent:    true,
         consentText: document.getElementById('consentlabel').textContent.trim(),
+        list:        document.getElementById('f_list').checked,
+        listText:    document.getElementById('listlabel').textContent.trim(),
         photos:     photos,
         /* Legacy single-photo field, kept deliberately. The page and the Apps
            Script are deployed separately; if this page goes live first, the
