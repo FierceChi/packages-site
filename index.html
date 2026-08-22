@@ -177,6 +177,8 @@
   .drop input[type=file]{display:none;}
   .pick{display:none;gap:16px;align-items:center;border:1px solid var(--line-soft);padding:14px;}
   .pick.on{display:flex;}
+  .picks{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+  .picks:empty{display:none;}
   .pick img{width:78px;height:78px;object-fit:cover;flex:none;background:var(--bg2);}
   .pick .meta{flex:1;min-width:0;font-size:12.5px;color:var(--muted);line-height:1.5;}
   .pick .meta .fn{color:var(--ink);font-weight:600;font-size:13px;word-break:break-all;margin-bottom:3px;}
@@ -337,7 +339,7 @@
   <p class="lead">If you've got a package and a sense of humor, you're exactly who we're looking for. Two minutes, one photo, done. No account, no app, nothing to print.</p>
   <div class="steps">
     <div class="step"><b>Step one</b><h4>Snap it</h4><p>Clothed, collar to knee. Any material &mdash; the more surprising the fabric, the better. Good light, no faces required.</p></div>
-    <div class="step"><b>Step two</b><h4>Fill it in</h4><p>A short profile and an email. Use your real name or an alias &mdash; whatever you want printed under it.</p></div>
+    <div class="step"><b>Step two</b><h4>Fill it in</h4><p>A short profile and an email. Use your real name or an alias &mdash; whatever you want printed with it.</p></div>
     <div class="step"><b>Step three</b><h4>Send it</h4><p>Tick the box, hit send. You'll get a confirmation straight away.</p></div>
   </div>
 
@@ -359,17 +361,13 @@
     <div class="fg"><label for="f_funfact">Fun fact</label><textarea id="f_funfact" placeholder="One surprising, printable thing about you."></textarea></div>
     <div class="fg"><label for="f_email">Email &mdash; required, so we can reach you</label><input id="f_email" type="email" autocomplete="email" placeholder="you@example.com"></div>
 
-    <div class="fg"><label>Your photo</label>
+    <div class="fg"><label>Your photos</label>
       <div class="drop" id="drop">
-        <b>Tap to add your shot</b>
-        JPG, PNG or HEIC &middot; straight from your camera roll, not a screenshot
-        <input type="file" id="f_photo" accept="image/*">
+        <b>Tap to add your shots</b>
+        JPG, PNG or HEIC &middot; straight from your camera roll, not a screenshot &middot; up to 3 of the same package
+        <input type="file" id="f_photo" accept="image/*" multiple>
       </div>
-      <div class="pick" id="pick">
-        <img id="pickimg" alt="">
-        <div class="meta"><div class="fn" id="pickname"></div><span id="pickmeta"></span></div>
-        <button type="button" class="swap" id="pickswap">Change</button>
-      </div>
+      <div class="picks" id="picks"></div>
       <div class="flag" id="flag"></div>
     </div>
 
@@ -461,14 +459,16 @@
   /* Warn below this on the short edge. A full plate wants ~1600 short /
      2400 long at 300 DPI; this is the "clearly a screenshot" line. */
   var WARN_SHORT_EDGE = 1500;
-  var MAX_MB = 25;
+  var MAX_MB = 25;          /* per photo */
+  var MAX_PHOTOS = 3;       /* several shots of the SAME package */
+  var MAX_TOTAL_MB = 20;    /* combined; base64 inflates ~33% in transit */
 
   var form = document.getElementById('pkgform');
   if(!form) return;
 
   var input = document.getElementById('f_photo'),
       drop  = document.getElementById('drop'),
-      pick  = document.getElementById('pick'),
+      picks = document.getElementById('picks'),
       flag  = document.getElementById('flag'),
       btn   = document.getElementById('pkgbtn'),
       msg   = document.getElementById('pkgmsg'),
@@ -476,7 +476,7 @@
       fill  = document.getElementById('barfill'),
       thanks= document.getElementById('pkgthanks');
 
-  var chosen = null, dims = {w:0,h:0}, sending = false;
+  var chosen = [], sending = false;
 
   function val(id){ var el=document.getElementById(id); return el? el.value.trim():''; }
   function isPhone(){
@@ -488,12 +488,9 @@
     bar.className='bar'; sending=false;
   }
 
-  if(isPhone()==='computer'){
-    drop.querySelector('b').textContent='Click to add your shot, or drag it here';
-  }
+  render();   /* paint the empty state and the correct prompt text */
 
   drop.addEventListener('click', function(){ input.click(); });
-  document.getElementById('pickswap').addEventListener('click', function(){ input.click(); });
 
   ['dragenter','dragover'].forEach(function(ev){
     drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add('over'); });
@@ -502,52 +499,147 @@
     drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove('over'); });
   });
   drop.addEventListener('drop', function(e){
-    if(e.dataTransfer.files && e.dataTransfer.files[0]) take(e.dataTransfer.files[0]);
+    if(e.dataTransfer.files && e.dataTransfer.files.length) take(e.dataTransfer.files);
   });
-  input.addEventListener('change', function(){ if(input.files[0]) take(input.files[0]); });
+  input.addEventListener('change', function(){
+    if(input.files && input.files.length) take(input.files);
+    /* Clear it, or re-picking the same file never fires change again. */
+    input.value = '';
+  });
 
-  function take(file){
-    msg.className='formmsg';
-    if(!/^image\//.test(file.type) && !/\.(jpe?g|png|heic|heif)$/i.test(file.name)){
-      flag.className='flag on';
-      flag.innerHTML='<b>That doesn\u2019t look like a photo.</b>Please pick an image file \u2014 JPG, PNG or HEIC.';
-      return;
+  function totalBytes(){
+    var n = 0; for(var i=0;i<chosen.length;i++) n += chosen[i].file.size; return n;
+  }
+  function warn(html){ flag.className='flag on'; flag.innerHTML = html; }
+
+  /* One combined message rather than a stack of warning boxes. */
+  function reviewFlags(){
+    var small = [];
+    for(var i=0;i<chosen.length;i++){
+      var c = chosen[i], short = Math.min(c.w, c.h);
+      if(short && short < WARN_SHORT_EDGE) small.push(c.file.name);
     }
-    if(file.size > MAX_MB*1024*1024){
-      flag.className='flag on';
-      flag.innerHTML='<b>That file is very large.</b>Please pick one under '+MAX_MB+' MB.';
-      return;
-    }
-
-    chosen = file; dims={w:0,h:0};
-    document.getElementById('pickname').textContent = file.name;
-    document.getElementById('pickmeta').textContent = (file.size/1048576).toFixed(1)+' MB \u00b7 reading\u2026';
-    pick.className='pick on';
-    drop.style.display='none';
-
-    var url = URL.createObjectURL(file);
-    document.getElementById('pickimg').src = url;
-
-    var probe = new Image();
-    probe.onload = function(){
-      dims = {w:probe.naturalWidth, h:probe.naturalHeight};
-      document.getElementById('pickmeta').textContent =
-        dims.w+' \u00d7 '+dims.h+' px \u00b7 '+(file.size/1048576).toFixed(1)+' MB';
-      var short = Math.min(dims.w, dims.h);
-      if(short && short < WARN_SHORT_EDGE){
-        flag.className='flag on';
-        flag.innerHTML='<b>This one may be too small to print.</b>It looks like a screenshot or a copy that\u2019s been sent through a message. If you still have the original in your camera roll, that one will print far better \u2014 tap Change to swap it. You can send this as-is if it\u2019s all you\u2019ve got.';
-      } else {
-        flag.className='flag';
-      }
-    };
-    probe.onerror = function(){
-      /* HEIC on non-Apple browsers cannot be measured. Say nothing rather
-         than guess wrong. */
-      document.getElementById('pickmeta').textContent = (file.size/1048576).toFixed(1)+' MB';
+    if(small.length){
+      var one = small.length === 1;
+      warn('<b>'+(one?'One of these may be too small to print.':'Some of these may be too small to print.')+'</b>'+
+           small.join(', ')+' — '+(one?'it looks':'they look')+' like a screenshot, or a copy that’s been '+
+           'sent through a message. If you still have the original in your camera roll, that will print far better '+
+           '— remove it here and add the original. You can send as-is if it’s all you’ve got.');
+    } else {
       flag.className='flag';
-    };
-    probe.src = url;
+    }
+  }
+
+  function render(){
+    picks.innerHTML = '';
+    for(var i=0;i<chosen.length;i++){
+      (function(c, idx){
+        var row = document.createElement('div');
+        row.className = 'pick on';
+
+        var img = document.createElement('img');
+        img.alt = ''; img.src = c.url;
+
+        var meta = document.createElement('div');
+        meta.className = 'meta';
+        var fn = document.createElement('div');
+        fn.className = 'fn'; fn.textContent = c.file.name;
+        var sp = document.createElement('span');
+        sp.textContent = c.w
+          ? c.w+' × '+c.h+' px · '+(c.file.size/1048576).toFixed(1)+' MB'
+          : (c.file.size/1048576).toFixed(1)+' MB';
+        meta.appendChild(fn); meta.appendChild(sp);
+
+        var rm = document.createElement('button');
+        rm.type = 'button'; rm.className = 'swap'; rm.textContent = 'Remove';
+        rm.addEventListener('click', function(){
+          try { URL.revokeObjectURL(c.url); } catch(err){}
+          chosen.splice(idx, 1); render(); reviewFlags();
+        });
+
+        row.appendChild(img); row.appendChild(meta); row.appendChild(rm);
+        picks.appendChild(row);
+      })(chosen[i], i);
+    }
+
+    if(chosen.length >= MAX_PHOTOS){
+      drop.style.display = 'none';
+    } else {
+      drop.style.display = '';
+      var pc = isPhone() === 'computer';
+      drop.querySelector('b').textContent = chosen.length
+        ? (pc ? 'Click to add another, or drag it here' : 'Tap to add another')
+        : (pc ? 'Click to add your shots, or drag them here' : 'Tap to add your shots');
+    }
+  }
+
+  /* Read the chosen files to base64 one at a time. Sequential on purpose:
+     several large FileReaders at once is a reliable way to run a phone
+     browser out of memory on a full-resolution camera roll photo. */
+  function readAll(items, done){
+    var out = [], i = 0;
+    (function next(){
+      if(i >= items.length){ done(null, out); return; }
+      var it = items[i];
+      var reader = new FileReader();
+      reader.onerror = function(){ done(true); };
+      reader.onload = function(){
+        out.push({
+          name: it.file.name, mime: it.file.type || 'image/jpeg',
+          size: it.file.size, width: it.w, height: it.h,
+          dataB64: String(reader.result).split(',')[1] || ''
+        });
+        i++; next();
+      };
+      reader.readAsDataURL(it.file);
+    })();
+  }
+
+  function take(list){
+    msg.className='formmsg';
+    var added = 0, rejected = [], hitLimit = false;
+
+    for(var i=0;i<list.length;i++){
+      var file = list[i];
+
+      if(chosen.length >= MAX_PHOTOS){ hitLimit = true; break; }
+      if(!/^image\//.test(file.type) && !/\.(jpe?g|png|heic|heif)$/i.test(file.name)){
+        rejected.push(file.name+' isn’t an image'); continue;
+      }
+      if(file.size > MAX_MB*1024*1024){
+        rejected.push(file.name+' is over '+MAX_MB+' MB'); continue;
+      }
+      if(totalBytes() + file.size > MAX_TOTAL_MB*1024*1024){
+        rejected.push(file.name+' would take the batch over '+MAX_TOTAL_MB+' MB'); continue;
+      }
+
+      var entry = { file:file, w:0, h:0, url:URL.createObjectURL(file) };
+      chosen.push(entry); added++;
+
+      (function(c){
+        var probe = new Image();
+        probe.onload = function(){
+          c.w = probe.naturalWidth; c.h = probe.naturalHeight;
+          render(); reviewFlags();
+        };
+        /* HEIC on non-Apple browsers cannot be measured. Say nothing rather
+           than guess wrong. */
+        probe.onerror = function(){ render(); };
+        probe.src = c.url;
+      })(entry);
+    }
+
+    render();
+
+    if(hitLimit){
+      warn('<b>That’s the limit.</b>You can send up to '+MAX_PHOTOS+' shots of the same package. '+
+           'Remove one if you’d rather send a different frame.');
+    } else if(rejected.length){
+      warn('<b>'+(rejected.length===1?'One file wasn’t added.':'Some files weren’t added.')+'</b>'+
+           rejected.join('. ')+'.');
+    } else if(added){
+      reviewFlags();
+    }
   }
 
   form.addEventListener('submit', function(ev){
@@ -560,7 +652,7 @@
       fail('Please enter an email address we can reach you at.');
       document.getElementById('f_email').focus(); return;
     }
-    if(!chosen){ fail('Please add a photo before sending.'); return; }
+    if(!chosen.length){ fail('Please add at least one photo before sending.'); return; }
     if(!document.getElementById('f_consent').checked){
       fail('Please tick the box so we know we have your permission.'); return;
     }
@@ -574,10 +666,10 @@
     bar.className = 'bar on';
     fill.style.width = '4%';
 
-    var reader = new FileReader();
-    reader.onerror = function(){ fail('Couldn\u2019t read that photo. Try picking it again.'); };
-    reader.onload = function(){
-      var b64 = String(reader.result).split(',')[1] || '';
+    /* Read every chosen photo, then send them all in one request. */
+    readAll(chosen, function(readErr, photos){
+      if(readErr){ fail('Couldn’t read one of those photos. Try adding it again.'); return; }
+
       var payload = {
         alias:      val('f_alias'),
         age:        val('f_age'),
@@ -590,10 +682,12 @@
         device:     isPhone(),
         consent:    true,
         consentText: document.getElementById('consentlabel').textContent.trim(),
-        photo: {
-          name: chosen.name, mime: chosen.type || 'image/jpeg',
-          size: chosen.size, width: dims.w, height: dims.h, dataB64: b64
-        }
+        photos:     photos,
+        /* Legacy single-photo field, kept deliberately. The page and the Apps
+           Script are deployed separately; if this page goes live first, the
+           older server still saves the first shot instead of silently saving
+           nothing at all. */
+        photo:      photos[0]
       };
 
       /* ------------------------------------------------------------------
@@ -601,10 +695,10 @@
          Registering ANY listener on the XMLHttpRequestUpload object makes
          this a non-simple CORS request, which forces a preflight OPTIONS.
          Apps Script cannot answer OPTIONS, so every submission would fail.
-         The bar below is therefore estimated from file size, not measured.
+         The bar below is therefore estimated from total size, not measured.
          ------------------------------------------------------------------ */
       var started = Date.now();
-      var estMs   = Math.max(1800, (chosen.size / 380000) * 1000);
+      var estMs   = Math.max(1800, (totalBytes() / 380000) * 1000);
       var ticker  = setInterval(function(){
         var pct = Math.min(92, (Date.now() - started) / estMs * 92);
         fill.style.width = Math.max(4, pct) + '%';
@@ -626,18 +720,17 @@
             thanks.scrollIntoView({behavior:'smooth',block:'center'});
           }, 250);
         } else if(res && res.error==='too_large'){
-          fail('That photo was too large to send. Please pick one under '+MAX_MB+' MB.');
+          fail('Those photos were too large to send together. Remove one and try again.');
         } else {
           fail('Something went wrong on our end. Please try again in a moment.');
         }
       };
       xhr.onerror = function(){
         stopTicker();
-        fail('Couldn\u2019t reach us just now \u2014 check your connection and try again.');
+        fail('Couldn’t reach us just now — check your connection and try again.');
       };
       xhr.send(JSON.stringify(payload));
-    };
-    reader.readAsDataURL(chosen);
+    });
   });
 })();
 </script>
