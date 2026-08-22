@@ -178,6 +178,11 @@
   .pick{display:none;gap:16px;align-items:center;border:1px solid var(--line-soft);padding:14px;}
   .pick.on{display:flex;}
   .picks{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+  /* The band is short, so the site's full 120px top rhythm oversizes it.
+     It now follows the dark #submit block, whose colour edge does the
+     separating, so this only needs enough room not to crowd that edge.
+     An id selector beats the `section` rule at every breakpoint. */
+  #notify{padding-top:80px;}
   .notifybox{max-width:620px;}
   .notifyrow{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-top:26px;}
   .notifyrow .fg{flex:1;min-width:230px;margin:0;}
@@ -324,25 +329,6 @@
   </div>
 </div></section>
 
-<section id="notify" class="reveal"><div class="wrap">
-  <div class="notifybox">
-    <div class="eyebrow">The list</div>
-    <h2>Tell me when it lands.</h2>
-    <p class="lead">One email when the book is ready, and one when a new volume opens for submissions. Nothing else, ever.</p>
-    <form id="listform" novalidate>
-      <div class="notifyrow">
-        <div class="fg">
-          <label for="l_email">Email</label>
-          <input id="l_email" type="email" autocomplete="email" placeholder="you@example.com">
-        </div>
-        <button class="btn primary" id="listbtn" type="submit">Notify me</button>
-      </div>
-      <div class="formmsg" id="listmsg"></div>
-      <div class="subnote">No photo, no profile &mdash; just your address. Reply to any email and we&rsquo;ll take you straight off the list.</div>
-    </form>
-  </div>
-</div></section>
-
 <section id="peek" style="padding-bottom:70px"><div class="wrap">
   <div class="peekhead reveal">
     <div class="eyebrow">A look inside</div>
@@ -418,6 +404,25 @@
     <h3>Package received.</h3>
     <p>Signed for, catalogued, and filed somewhere very safe. A confirmation is on its way to your inbox.</p>
     <p class="ta">Thank you, sincerely. It takes a certain confidence to send a stranger a photograph of your trousers.</p>
+  </div>
+</div></section>
+
+<section id="notify" class="reveal"><div class="wrap">
+  <div class="notifybox">
+    <div class="eyebrow">The list</div>
+    <h2>Keep me posted.</h2>
+    <p class="lead">Two kinds of people end up on this list: the ones who want the book, and the ones who want to be in it. Both welcome. We&rsquo;ll write when a volume is available, and when we&rsquo;re working on the next one. That&rsquo;s it &mdash; we&rsquo;re far too busy looking at packages.</p>
+    <form id="listform" novalidate>
+      <div class="notifyrow">
+        <div class="fg">
+          <label for="l_email">Email</label>
+          <input id="l_email" type="email" autocomplete="email" placeholder="you@example.com">
+        </div>
+        <button class="btn primary" id="listbtn" type="submit">Add me</button>
+      </div>
+      <div class="formmsg" id="listmsg"></div>
+      <div class="subnote">Reply to any email and we&rsquo;ll take you off quietly, no hard feelings.</div>
+    </form>
   </div>
 </div></section>
 
@@ -507,7 +512,7 @@
       lmsg.className = 'formmsg on' + (ok ? ' ok' : '');
     }
     function done(){
-      busy = false; lbtn.disabled = false; lbtn.textContent = 'Notify me';
+      busy = false; lbtn.disabled = false; lbtn.textContent = 'Add me';
     }
 
     lf.addEventListener('submit', function(ev){
@@ -537,8 +542,8 @@
         if(res && res.ok){
           lf.reset();
           say(res.already
-                ? 'You’re already on the list — nothing more to do.'
-                : 'You’re on the list. We’ll be in touch when it lands.', true);
+                ? 'You’re already on it. Twice is flattering, but once is plenty.'
+                : 'You’re on the list. Catalogued and filed, same as everything else around here.', true);
         } else {
           say('Something went wrong on our end. Please try again in a moment.', false);
         }
