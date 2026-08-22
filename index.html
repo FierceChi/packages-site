@@ -168,6 +168,45 @@
     padding:12px 20px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
   .signbtn .dot{width:5px;height:5px;border-radius:50%;background:var(--ink);}
   .subnote{font-size:11.5px;color:var(--muted);margin-top:18px;line-height:1.65;}
+
+  /* photo picker */
+  .drop{border:1px dashed var(--line);padding:26px 22px;text-align:center;color:var(--muted);
+    font-size:13px;cursor:pointer;transition:background .15s,border-color .15s;background:transparent;}
+  .drop:hover,.drop.over{background:var(--bg2);border-color:var(--ink);}
+  .drop b{display:block;color:var(--ink);font-size:14px;margin-bottom:3px;font-weight:600;}
+  .drop input[type=file]{display:none;}
+  .pick{display:none;gap:16px;align-items:center;border:1px solid var(--line-soft);padding:14px;}
+  .pick.on{display:flex;}
+  .pick img{width:78px;height:78px;object-fit:cover;flex:none;background:var(--bg2);}
+  .pick .meta{flex:1;min-width:0;font-size:12.5px;color:var(--muted);line-height:1.5;}
+  .pick .meta .fn{color:var(--ink);font-weight:600;font-size:13px;word-break:break-all;margin-bottom:3px;}
+  .pick .swap{flex:none;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);
+    text-decoration:underline;cursor:pointer;background:none;border:none;font-family:inherit;}
+  .flag{display:none;margin-top:12px;padding:13px 16px;font-size:12.5px;line-height:1.6;
+    background:#f6ebe7;color:#5e2e22;border-left:2px solid #7a3b2c;}
+  .flag.on{display:block;}
+  .flag b{display:block;margin-bottom:3px;}
+
+  /* progress */
+  .bar{display:none;height:3px;background:var(--line-soft);margin-top:18px;overflow:hidden;}
+  .bar.on{display:block;}
+  .bar i{display:block;height:100%;width:0;background:var(--ink);transition:width .2s ease;}
+
+  .consent{display:flex;gap:12px;align-items:flex-start;margin-top:22px;padding:18px;background:var(--bg2);}
+  .consent input{width:16px;height:16px;flex:none;margin-top:2px;accent-color:var(--ink);cursor:pointer;}
+  .consent label{font-size:12.5px;color:var(--ink);line-height:1.6;cursor:pointer;font-weight:400;
+    letter-spacing:normal;text-transform:none;margin:0;}
+  .formmsg{display:none;margin-top:16px;padding:14px 17px;font-size:13px;line-height:1.6;}
+  .formmsg.on{display:block;background:#f6ebe7;color:#7a3b2c;border-left:2px solid #7a3b2c;}
+  .submitbtn[disabled]{opacity:.45;cursor:default;}
+  .thanks{display:none;text-align:center;padding:56px 44px;background:var(--card);max-width:660px;
+    margin-top:70px;border:1px solid rgba(241,236,226,.14);}
+  .thanks.on{display:block;}
+  .thanks h3{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:400;
+    font-size:clamp(26px,3vw,34px);margin-bottom:14px;color:var(--ink);}
+  .thanks p{font-size:14px;color:var(--muted);line-height:1.75;max-width:440px;margin:0 auto 10px;}
+  .thanks p.ta{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-size:15.5px;
+    color:var(--ink);margin-top:24px;padding-top:20px;border-top:1px solid var(--line-soft);max-width:420px;}
   .submitbtn{width:100%;margin-top:28px;background:var(--ink);color:var(--bg);padding:17px;border:none;
     font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:opacity .15s;}
   .submitbtn:hover{opacity:.8;}
@@ -215,7 +254,7 @@
 
 <header class="hero">
   <div class="wrap">
-    <span class="herotag">Vol. 1 · Materials</span>
+    <span class="herotag">Materials</span>
     <h1>Everybody<br><em>looks.</em></h1>
     <p class="sub">A cheeky, tasteful coffee-table book of men, their materials, and the fine art of not-quite-looking. Clothed. Catalogued. Handle with care.</p>
     <div class="btnrow">
@@ -295,42 +334,62 @@
 <section class="submit reveal" id="submit"><div class="wrap">
   <div class="eyebrow">The call for packages</div>
   <h2>Get in the book.</h2>
-  <p class="lead">We're collecting for Volume One. If you've got a package and a sense of humor, you're exactly who we're looking for. It takes about two minutes.</p>
+  <p class="lead">If you've got a package and a sense of humor, you're exactly who we're looking for. Two minutes, one photo, done. No account, no app, nothing to print.</p>
   <div class="steps">
-    <div class="step"><b>Step one</b><h4>Snap it</h4><p>Clothed, from collar to knee. Any material — the more surprising the fabric, the better. Good light, no faces required.</p></div>
-    <div class="step"><b>Step two</b><h4>Sign it</h4><p>A quick model release so we can legally include you. Signed electronically — nothing to print.</p></div>
-    <div class="step"><b>Step three</b><h4>Send it</h4><p>Fill in your profile, upload your shot, and you're in the running for Volume One.</p></div>
+    <div class="step"><b>Step one</b><h4>Snap it</h4><p>Clothed, collar to knee. Any material &mdash; the more surprising the fabric, the better. Good light, no faces required.</p></div>
+    <div class="step"><b>Step two</b><h4>Fill it in</h4><p>A short profile and an email. Use your real name or an alias &mdash; whatever you want printed under it.</p></div>
+    <div class="step"><b>Step three</b><h4>Send it</h4><p>Tick the box, hit send. You'll get a confirmation straight away, and we'll email before anything is published.</p></div>
   </div>
 
-  <form class="form" onsubmit="return false;">
+  <form class="form" id="pkgform" novalidate>
     <div class="frow">
-      <div class="fg"><label>Name or alias (for your credit line)</label><input placeholder="e.g. Marcus, or 'Denim Dan'"></div>
-      <div class="fg" style="max-width:120px"><label>Age</label><input placeholder="34"></div>
+      <div class="fg"><label for="f_alias">Name or alias (for your credit line)</label><input id="f_alias" placeholder="e.g. Marcus, or 'Denim Dan'"></div>
+      <div class="fg" style="max-width:120px"><label for="f_age">Age</label><input id="f_age" inputmode="numeric" placeholder="34"></div>
     </div>
     <div class="frow">
-      <div class="fg"><label>Occupation</label><input placeholder="Firefighter"></div>
-      <div class="fg"><label>Hometown</label><input placeholder="Austin, TX"></div>
+      <div class="fg"><label for="f_occupation">Occupation</label><input id="f_occupation" placeholder="Firefighter"></div>
+      <div class="fg"><label for="f_hometown">Hometown</label><input id="f_hometown" placeholder="Austin, TX"></div>
     </div>
     <div class="frow">
-      <div class="fg"><label>Material / fabric</label>
-        <select><option>Denim</option><option>Chinos &amp; Khakis</option><option>Suits</option><option>Leather</option><option>Uniform</option><option>Sweats</option><option>Gym Shorts</option><option>Compression &amp; Spandex</option><option>Underwear</option><option>Swim</option><option>Costume &amp; Novelty</option><option>Bloopers</option></select>
+      <div class="fg"><label for="f_material">Material / fabric</label>
+        <select id="f_material"><option>Denim</option><option>Chinos &amp; Khakis</option><option>Suits</option><option>Leather</option><option>Uniform</option><option>Sweats</option><option>Gym Shorts</option><option>Compression &amp; Spandex</option><option>Underwear</option><option>Swim</option><option>Costume &amp; Novelty</option><option>Bloopers</option></select>
       </div>
-      <div class="fg"><label>Favorite activity</label><input placeholder="Long hikes. Always big day."></div>
+      <div class="fg"><label for="f_activity">Favorite activity</label><input id="f_activity" placeholder="Long hikes. Always big day."></div>
     </div>
-    <div class="fg"><label>Fun fact</label><textarea placeholder="One surprising, printable thing about you."></textarea></div>
-    <div class="fg"><label>Email (so we can let you know when it's available)</label><input placeholder="you@example.com"></div>
+    <div class="fg"><label for="f_funfact">Fun fact</label><textarea id="f_funfact" placeholder="One surprising, printable thing about you."></textarea></div>
+    <div class="fg"><label for="f_email">Email &mdash; required, so we can reach you</label><input id="f_email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+
     <div class="fg"><label>Your photo</label>
-      <div class="upload"><b>Tap to add your shot</b>JPG or PNG · clothed, collar-to-knee · we'll crop &amp; style it to match the book</div>
+      <div class="drop" id="drop">
+        <b>Tap to add your shot</b>
+        JPG, PNG or HEIC &middot; straight from your camera roll, not a screenshot
+        <input type="file" id="f_photo" accept="image/*">
+      </div>
+      <div class="pick" id="pick">
+        <img id="pickimg" alt="">
+        <div class="meta"><div class="fn" id="pickname"></div><span id="pickmeta"></span></div>
+        <button type="button" class="swap" id="pickswap">Change</button>
+      </div>
+      <div class="flag" id="flag"></div>
     </div>
 
-    <div class="release">
-      <div class="rt">✎ Required · Model release</div>
-      <p>Before you submit, you'll sign a short model release granting permission to include your photo in <em>Packages</em> (print &amp; promotional use). Signed securely by e-signature — you'll get a copy for your records.</p>
-      <a href="#" class="signbtn"><span class="dot"></span> Sign the release</a>
+    <div class="consent">
+      <input type="checkbox" id="f_consent">
+      <label for="f_consent" id="consentlabel">I'm 18 or older, that's me in the photo, and I give permission for it to appear in <em>Packages</em> and in material promoting the book. I can withdraw any time before it goes to print by replying to my confirmation email.</label>
     </div>
-    <button class="submitbtn">Send my package</button>
-    <div class="subnote">By submitting you confirm you're 18+ and the person in the photo. We only use your email to reach you about the book. Handle with care.</div>
+
+    <button class="submitbtn" id="pkgbtn" type="submit">Send my package</button>
+    <div class="bar" id="bar"><i id="barfill"></i></div>
+    <div class="formmsg" id="pkgmsg"></div>
+    <div class="subnote">We only use your email to reach you about the book &mdash; never sold, never a mailing list you didn't ask for. Trouble uploading? Email your photo and details to <a href="mailto:equalitychick@gmail.com" style="color:var(--ink)">equalitychick@gmail.com</a> instead. Handle with care.</div>
   </form>
+
+  <div class="thanks" id="pkgthanks">
+    <h3>Package received.</h3>
+    <p>Signed for, catalogued, and filed somewhere very safe. A confirmation is on its way to your inbox.</p>
+    <p>If you make the book, you'll hear from us long before anything goes near a printer.</p>
+    <p class="ta">Thank you, sincerely. It takes a certain confidence to send a stranger a photograph of your trousers.</p>
+  </div>
 </div></section>
 
 <section class="paige reveal" id="paige"><div class="wrap"><div class="paigegrid">
@@ -349,16 +408,16 @@
   <div style="margin-top:30px">
     <details open><summary>Is this... tasteful?</summary><p>Yes. Everyone is fully clothed, it's shot like a product catalogue, and the whole thing is a wink, not a leer. If your grandmother has a sense of humor, she'll love it.</p></details>
     <details><summary>Do I have to show my face?</summary><p>No. The frame is collar-to-knee. You can use your real name or an alias for your credit line — your call.</p></details>
-    <details><summary>What happens to my photo?</summary><p>We crop and style it to match the book's look, pair it with your profile, and — if selected — include it in Volume One.</p></details>
+    <details><summary>What happens to my photo?</summary><p>We crop and style it to match the book's look, pair it with your profile, and — if selected — include it in the book.</p></details>
     <details><summary>Why do you need a signature?</summary><p>So we can legally include you in a book that might one day be sold. The release is short, plain-English, signed electronically, and you keep a copy.</p></details>
-    <details><summary>When does it come out?</summary><p>Volume One is in collection now. Drop your email in the form and we'll tell you the moment it ships — and which edition to grab.</p></details>
+    <details><summary>When does it come out?</summary><p>We're in collection now. Drop your email in the form and we'll tell you the moment it ships — and which edition to grab.</p></details>
   </div>
 </div></section>
 
 <footer><div class="wrap"><div class="foot">
   <div>
     <div class="fb">Packages</div>
-    <div class="fl">A coffee-table book by Anita P. Book · Vol. 1</div>
+    <div class="fl">A coffee-table book by Anita P. Book</div>
   </div>
   <div class="stampfoot">Return to sender<br>contents shifted<br>in transit</div>
 </div></div></footer>
@@ -395,5 +454,193 @@
   });
 </script>
 
+<script>
+(function(){
+  /* ---- SETTINGS -------------------------------------------------------- */
+  var ENDPOINT = 'https://script.google.com/macros/s/AKfycbxzXHoo1lPAk2BgYvcD_5zzmCKOIjbUXm8fbJviVG6bogS0kS2lC0aCPcLgYUyOzVAQPw/exec';
+
+  /* Warn below this on the short edge. A full plate wants ~1600 short /
+     2400 long at 300 DPI; this is the "clearly a screenshot" line. */
+  var WARN_SHORT_EDGE = 1500;
+  var MAX_MB = 25;
+
+  var form = document.getElementById('pkgform');
+  if(!form) return;
+
+  var input = document.getElementById('f_photo'),
+      drop  = document.getElementById('drop'),
+      pick  = document.getElementById('pick'),
+      flag  = document.getElementById('flag'),
+      btn   = document.getElementById('pkgbtn'),
+      msg   = document.getElementById('pkgmsg'),
+      bar   = document.getElementById('bar'),
+      fill  = document.getElementById('barfill'),
+      thanks= document.getElementById('pkgthanks');
+
+  var chosen = null, dims = {w:0,h:0}, sending = false;
+
+  function val(id){ var el=document.getElementById(id); return el? el.value.trim():''; }
+  function isPhone(){
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ? 'phone' : 'computer';
+  }
+  function fail(t){
+    msg.textContent=t; msg.className='formmsg on';
+    btn.disabled=false; btn.textContent='Send my package';
+    bar.className='bar'; sending=false;
+  }
+
+  if(isPhone()==='computer'){
+    drop.querySelector('b').textContent='Click to add your shot, or drag it here';
+  }
+
+  drop.addEventListener('click', function(){ input.click(); });
+  document.getElementById('pickswap').addEventListener('click', function(){ input.click(); });
+
+  ['dragenter','dragover'].forEach(function(ev){
+    drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add('over'); });
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove('over'); });
+  });
+  drop.addEventListener('drop', function(e){
+    if(e.dataTransfer.files && e.dataTransfer.files[0]) take(e.dataTransfer.files[0]);
+  });
+  input.addEventListener('change', function(){ if(input.files[0]) take(input.files[0]); });
+
+  function take(file){
+    msg.className='formmsg';
+    if(!/^image\//.test(file.type) && !/\.(jpe?g|png|heic|heif)$/i.test(file.name)){
+      flag.className='flag on';
+      flag.innerHTML='<b>That doesn\u2019t look like a photo.</b>Please pick an image file \u2014 JPG, PNG or HEIC.';
+      return;
+    }
+    if(file.size > MAX_MB*1024*1024){
+      flag.className='flag on';
+      flag.innerHTML='<b>That file is very large.</b>Please pick one under '+MAX_MB+' MB.';
+      return;
+    }
+
+    chosen = file; dims={w:0,h:0};
+    document.getElementById('pickname').textContent = file.name;
+    document.getElementById('pickmeta').textContent = (file.size/1048576).toFixed(1)+' MB \u00b7 reading\u2026';
+    pick.className='pick on';
+    drop.style.display='none';
+
+    var url = URL.createObjectURL(file);
+    document.getElementById('pickimg').src = url;
+
+    var probe = new Image();
+    probe.onload = function(){
+      dims = {w:probe.naturalWidth, h:probe.naturalHeight};
+      document.getElementById('pickmeta').textContent =
+        dims.w+' \u00d7 '+dims.h+' px \u00b7 '+(file.size/1048576).toFixed(1)+' MB';
+      var short = Math.min(dims.w, dims.h);
+      if(short && short < WARN_SHORT_EDGE){
+        flag.className='flag on';
+        flag.innerHTML='<b>This one may be too small to print.</b>It looks like a screenshot or a copy that\u2019s been sent through a message. If you still have the original in your camera roll, that one will print far better \u2014 tap Change to swap it. You can send this as-is if it\u2019s all you\u2019ve got.';
+      } else {
+        flag.className='flag';
+      }
+    };
+    probe.onerror = function(){
+      /* HEIC on non-Apple browsers cannot be measured. Say nothing rather
+         than guess wrong. */
+      document.getElementById('pickmeta').textContent = (file.size/1048576).toFixed(1)+' MB';
+      flag.className='flag';
+    };
+    probe.src = url;
+  }
+
+  form.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    if(sending) return;
+    msg.className='formmsg';
+
+    var email = val('f_email');
+    if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      fail('Please enter an email address we can reach you at.');
+      document.getElementById('f_email').focus(); return;
+    }
+    if(!chosen){ fail('Please add a photo before sending.'); return; }
+    if(!document.getElementById('f_consent').checked){
+      fail('Please tick the box so we know we have your permission.'); return;
+    }
+    if(ENDPOINT.indexOf('PASTE_')===0){
+      fail('This form isn\u2019t connected yet. (Setup step remaining.)'); return;
+    }
+
+    sending = true;
+    btn.disabled = true;
+    btn.textContent = 'Sending\u2026';
+    bar.className = 'bar on';
+    fill.style.width = '4%';
+
+    var reader = new FileReader();
+    reader.onerror = function(){ fail('Couldn\u2019t read that photo. Try picking it again.'); };
+    reader.onload = function(){
+      var b64 = String(reader.result).split(',')[1] || '';
+      var payload = {
+        alias:      val('f_alias'),
+        age:        val('f_age'),
+        occupation: val('f_occupation'),
+        hometown:   val('f_hometown'),
+        material:   val('f_material'),
+        activity:   val('f_activity'),
+        funfact:    val('f_funfact'),
+        email:      email,
+        device:     isPhone(),
+        consent:    true,
+        consentText: document.getElementById('consentlabel').textContent.trim(),
+        photo: {
+          name: chosen.name, mime: chosen.type || 'image/jpeg',
+          size: chosen.size, width: dims.w, height: dims.h, dataB64: b64
+        }
+      };
+
+      /* ------------------------------------------------------------------
+         DO NOT attach anything to xhr.upload (onprogress, onload, etc).
+         Registering ANY listener on the XMLHttpRequestUpload object makes
+         this a non-simple CORS request, which forces a preflight OPTIONS.
+         Apps Script cannot answer OPTIONS, so every submission would fail.
+         The bar below is therefore estimated from file size, not measured.
+         ------------------------------------------------------------------ */
+      var started = Date.now();
+      var estMs   = Math.max(1800, (chosen.size / 380000) * 1000);
+      var ticker  = setInterval(function(){
+        var pct = Math.min(92, (Date.now() - started) / estMs * 92);
+        fill.style.width = Math.max(4, pct) + '%';
+      }, 120);
+      function stopTicker(){ clearInterval(ticker); }
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', ENDPOINT, true);
+      xhr.setRequestHeader('Content-Type','text/plain;charset=utf-8');
+      xhr.onload = function(){
+        stopTicker();
+        fill.style.width='100%';
+        var res = null;
+        try { res = JSON.parse(xhr.responseText); } catch(err){}
+        if(res && res.ok){
+          setTimeout(function(){
+            form.style.display='none';
+            thanks.className='thanks on';
+            thanks.scrollIntoView({behavior:'smooth',block:'center'});
+          }, 250);
+        } else if(res && res.error==='too_large'){
+          fail('That photo was too large to send. Please pick one under '+MAX_MB+' MB.');
+        } else {
+          fail('Something went wrong on our end. Please try again in a moment.');
+        }
+      };
+      xhr.onerror = function(){
+        stopTicker();
+        fail('Couldn\u2019t reach us just now \u2014 check your connection and try again.');
+      };
+      xhr.send(JSON.stringify(payload));
+    };
+    reader.readAsDataURL(chosen);
+  });
+})();
+</script>
 </body>
 </html>
