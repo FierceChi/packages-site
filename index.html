@@ -184,6 +184,13 @@
      An id selector beats the `section` rule at every breakpoint. */
   #notify{padding-top:80px;}
   .notifybox{max-width:620px;}
+  #contact{padding-top:80px;padding-bottom:90px;}
+  .contactbox{max-width:620px;}
+  .contactline{margin-top:26px;font-family:"Playfair Display",Georgia,serif;
+    font-size:clamp(19px,2.2vw,25px);line-height:1.4;}
+  .contactline a{color:var(--ink);text-decoration:none;
+    border-bottom:1px solid var(--line);padding-bottom:4px;transition:border-color .15s;}
+  .contactline a:hover{border-bottom-color:var(--ink);}
   .notifyrow{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-top:26px;}
   .notifyrow .fg{flex:1;min-width:230px;margin:0;}
   .notifyrow .btn{flex:none;border:none;cursor:pointer;font-family:inherit;}
@@ -441,10 +448,21 @@
   <h2>Questions, answered.</h2>
   <div style="margin-top:30px">
     <details open><summary>Is this... tasteful?</summary><p>Yes. Everyone is fully clothed, it's shot like a product catalogue, and the whole thing is a wink, not a leer. If your grandmother has a sense of humor, she'll love it.</p></details>
+    <details><summary>Do I have to be 18, and does it have to be mine?</summary><p>Yes, and yes &mdash; neither is negotiable. Everyone in the book is 18 or older, and the package has to be your own: not a friend's, not something you found on the internet. The form won't take an age under 18, and anything that turns out to belong to someone else gets deleted rather than filed.</p></details>
+    <details><summary>Is there anything you won't accept?</summary><p>Plenty. The frame is collar-to-knee and everything stays on &mdash; nothing bare, nothing explicit, nothing that needs a warning label. Send that and we delete it. Think catalogue, not content.</p></details>
     <details><summary>Do I have to show my face?</summary><p>No. The frame is collar-to-knee. You can use your real name or an alias for your credit line — your call.</p></details>
     <details><summary>What happens to my photo?</summary><p>We crop and style it to match the book's look, pair it with your profile, and — if selected — include it in the book.</p></details>
     <details><summary>Why do you need my permission?</summary><p>So we can legally include you in a book that might one day be sold. It's one checkbox in plain English, and we keep a record of exactly what you agreed to.</p></details>
     <details><summary>When does it come out?</summary><p>We're in collection now. Join the list and we'll tell you the moment it ships — and which edition to grab. No photo needed.</p></details>
+  </div>
+</div></section>
+
+<section id="contact" class="reveal"><div class="wrap">
+  <div class="contactbox">
+    <div class="eyebrow">Get in touch</div>
+    <h2>Write to us.</h2>
+    <p class="lead">Questions, second thoughts, a photo that refuses to upload, or a complaint about the puns &mdash; all to the same address, and a person reads it.</p>
+    <p class="contactline"><a href="mailto:anitapbook@gmail.com">anitapbook@gmail.com</a></p>
   </div>
 </div></section>
 
